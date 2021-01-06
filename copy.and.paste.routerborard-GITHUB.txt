@@ -1,0 +1,36 @@
+/system script
+add dont-require-permissions=no name=bkp_diario owner=josemar policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive source=":local hostname [/system identity get na\
+    me];\r\
+    \n:local data [:pick [/system clock get date] 4 6];\r\
+    \n:local mes [:pick [/system clock get date] 0 3];\r\
+    \n:local ano [:pick [/system clock get date] 7 11];\r\
+    \n:local filename \"\$hostname-\$data-\$mes-\$ano\";\r\
+    \n\r\
+    \n/export file=\$filename;\
+    \n\r\
+    \n:local nomeDoExport \"\$filename.rsc\";\r\
+    \n:delay 5000ms;\r\
+    \n:log info \"Arquivo de export \$nomeDoExport feito.\";\r\
+    \n/system backup save name=\$filename dont-encrypt=yes;\r\
+    \n:local nomeDoBackup \"\$filename.backup\";\r\
+    \n:delay 5000ms;\r\
+    \n:log info \"Arquivo de backup \$nomeDoBackup feito.\";\r\
+    \n/tool fetch address=99.99.99.99 src-path=\"\$nomeDoExport\" user=user_ftp mode=ftp password=password_ftp dst-path=\"/file-path/\$nomeDoExport\" upload=yes\r\
+    \n:delay 3000ms;\r\
+    \n:log info \"Arquivo de export \$nomeDoExport enviado via FTP.\";\r\
+    \n/tool fetch address=99.99.99.99 src-path=\"\$nomeDoBackup\" user=user_ftp mode=ftp password=password_ftp dst-path=\"/file-path/\$nomeDoBackup\" upload=yes\r\
+    \n:delay 3000ms;\r\
+    \n:log info \"Arquivo de backup \$nomeDoBackup enviado via FTP\";\r\
+    \n:delay 500ms;\r\
+    \n:log info \"Enviados via FTP arquivo de export \$nomeDoExport e arquivo de Backup \$nomeDoBackup\";\r\
+    \ndelay 3000ms;\r\
+    \n:local excluir \"\$filename\";\r\
+    \n:foreach i in=[/file find] do={:if ([:typeof [:find [/file get \$i name] \"\$excluir\"]]!=\"nil\") do={/file remove \$i}}\r\
+    \n:log info \"Excluidos dos arquivos da routerboard os arquivos de export \$nomeDoExport e arquivo de Backup \$nomeDoBackup\";"
+add dont-require-permissions=no name=removerBKPS owner=josemar policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive source=":local mes [:pick [/system clock get d\
+    ate] 0 3];\r\
+    \n:local excluir \"\$mes\";\r\
+    \n:foreach i in=[/file find] do={:if ([:typeof [:find [/file get \$i name] \"\$excluir\"]]!=\"nil\") do={/file remove \$i}}"
+
+/system scheduler
+add interval=1d name=executar_bkp_diario on-event=bkp_diario policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive start-date=jan/01/1970 start-time=04:00:00

@@ -1,0 +1,27 @@
+:local hostname [/system identity get name];
+:local data [:pick [/system clock get date] 4 6];
+:local mes [:pick [/system clock get date] 0 3];
+:local ano [:pick [/system clock get date] 7 11];
+:local filename "$hostname-$data-$mes-$ano";
+
+/export file=$filename;
+
+:local nomeDoExport "$filename.rsc";
+:delay 5000ms;
+:log info "Arquivo de export $nomeDoExport feito.";
+/system backup save name=$filename dont-encrypt=yes;
+:local nomeDoBackup "$filename.backup";
+:delay 5000ms;
+:log info "Arquivo de backup $nomeDoBackup feito.";
+/tool fetch address=99.99.99.99 src-path="$nomeDoExport" user=user_ftp mode=ftp password=password_ftp dst-path="/file-path/$nomeDoExport" upload=yes
+:delay 3000ms;
+:log info "Arquivo de export $nomeDoExport enviado via FTP.";
+/tool fetch address=99.99.99.99 src-path="$nomeDoBackup" user=user_ftp mode=ftp password=password_ftp dst-path="/file-path/$nomeDoBackup" upload=yes
+:delay 3000ms;
+:log info "Arquivo de backup $nomeDoBackup enviado via FTP";
+:delay 500ms;
+:log info "Enviados via FTP arquivo de export $nomeDoExport e arquivo de Backup $nomeDoBackup";
+delay 3000ms;
+:local excluir "$filename";
+:foreach i in=[/file find] do={:if ([:typeof [:find [/file get $i name] "$excluir"]]!="nil") do={/file remove $i}}
+:log info "Excluidos dos arquivos da routerboard os arquivos de export $nomeDoExport e arquivo de Backup $nomeDoBackup";
